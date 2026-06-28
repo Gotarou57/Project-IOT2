@@ -11,12 +11,14 @@ class SensorSetting extends Model
     protected $fillable = [
         'temperature_enabled',
         'humidity_enabled',
+        'air_quality_enabled',
         'refresh_delay',
     ];
 
     protected $casts = [
         'temperature_enabled' => 'boolean',
         'humidity_enabled'    => 'boolean',
+        'air_quality_enabled' => 'boolean',
         'refresh_delay'       => 'integer',
     ];
 
@@ -28,6 +30,7 @@ class SensorSetting extends Model
         return self::firstOrCreate([], [
             'temperature_enabled' => true,
             'humidity_enabled'    => true,
+            'air_quality_enabled' => true,
             'refresh_delay'       => 30,
         ]);
     }

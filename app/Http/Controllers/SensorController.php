@@ -23,6 +23,7 @@ class SensorController extends Controller
         $timestamps   = [];
         $temperatures = [];
         $humidities   = [];
+        $airQualities = [];
 
         if ($response->successful()) {
             $data  = $response->json();
@@ -32,24 +33,29 @@ class SensorController extends Controller
                 $timestamps[]   = Carbon::parse($feed['created_at'])->setTimezone('Asia/Jakarta')->format('H:i');
                 $temperatures[] = (float) ($feed['field1'] ?? 0);
                 $humidities[]   = (float) ($feed['field2'] ?? 0);
+                $airQualities[] = (float) ($feed['field3'] ?? 0);
             }
 
             $temperature = end($temperatures) ?: 'N/A';
             $humidity    = end($humidities)   ?: 'N/A';
+            $airQuality  = end($airQualities) ?: 'N/A';
             $timestamp   = end($timestamps)   ?: 'N/A';
         } else {
             $temperature = 'Error';
             $humidity    = 'Error';
+            $airQuality  = 'Error';
             $timestamp   = 'N/A';
         }
 
         return compact(
             'temperature',
             'humidity',
+            'airQuality',
             'timestamp',
             'timestamps',
             'temperatures',
-            'humidities'
+            'humidities',
+            'airQualities'
         );
     }
 
@@ -81,6 +87,16 @@ class SensorController extends Controller
         $data     = $this->fetchSensorData();
         $settings = SensorSetting::current();
         return view('humidity', array_merge($data, compact('settings')));
+    }
+
+    /**
+     * Air Quality detail page.
+     */
+    public function airQuality()
+    {
+        $data     = $this->fetchSensorData();
+        $settings = SensorSetting::current();
+        return view('air_quality', array_merge($data, compact('settings')));
     }
 
     /**

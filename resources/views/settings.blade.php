@@ -378,6 +378,27 @@ input[type=range]::-moz-range-thumb {
                     </label>
                 </div>
 
+                {{-- Air Quality Toggle --}}
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:3px;">
+                            <div style="width:32px;height:32px;background:linear-gradient(135deg,#faf5ff,#f3e8ff);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <svg width="16" height="16" fill="none" stroke="#a855f7" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/>
+                                </svg>
+                            </div>
+                            <strong>Air Quality Sensor</strong>
+                        </div>
+                        <small style="margin-left:42px;">Field 3 · MQ135 · PPM</small>
+                    </div>
+                    <label class="toggle-switch" for="air_quality_enabled">
+                        <input type="checkbox" id="air_quality_enabled" name="air_quality_enabled"
+                            value="1" {{ $settings->air_quality_enabled ? 'checked' : '' }}
+                            onchange="updatePreview()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
             </div>
         </div>
 
@@ -447,6 +468,10 @@ input[type=range]::-moz-range-thumb {
                         <span class="pill-dot"></span>
                         Humidity
                     </span>
+                    <span class="sensor-pill {{ $settings->air_quality_enabled ? 'on' : 'off' }}" id="pill-air">
+                        <span class="pill-dot"></span>
+                        Air Quality
+                    </span>
                 </div>
             </div>
             <div style="text-align:right;">
@@ -498,12 +523,15 @@ function setDelay(val) {
 function updatePreview() {
     const tempOn = document.getElementById('temperature_enabled').checked;
     const humOn  = document.getElementById('humidity_enabled').checked;
+    const airOn  = document.getElementById('air_quality_enabled').checked;
 
     const tempPill = document.getElementById('pill-temp');
     const humPill  = document.getElementById('pill-hum');
+    const airPill  = document.getElementById('pill-air');
 
     tempPill.className = 'sensor-pill ' + (tempOn ? 'on' : 'off');
     humPill.className  = 'sensor-pill ' + (humOn  ? 'on' : 'off');
+    airPill.className  = 'sensor-pill ' + (airOn  ? 'on' : 'off');
 }
 
 // Initialise on load

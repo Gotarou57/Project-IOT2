@@ -127,10 +127,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 borderColor: '#ef4444',
                 backgroundColor: gradient,
                 borderWidth: 3,
-                pointRadius: 4,
+                pointRadius: 0,
                 pointBackgroundColor: '#ef4444',
                 pointBorderColor: '#fff',
-                pointBorderWidth: 2,
+                pointBorderWidth: 0,
                 tension: 0.4,
                 fill: true
             }]

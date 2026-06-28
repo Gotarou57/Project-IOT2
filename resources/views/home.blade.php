@@ -84,6 +84,35 @@
         </div>
     </div>
 
+    {{-- Air Quality Card --}}
+    <div class="stat-card" style="{{ !$settings->air_quality_enabled ? 'opacity:0.55;' : '' }}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div style="width:44px;height:44px;background:linear-gradient(135deg,#faf5ff,#f3e8ff);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                <svg width="22" height="22" fill="none" stroke="#a855f7" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/>
+                </svg>
+            </div>
+            @if($settings->air_quality_enabled)
+            <a href="{{ route('air-quality') }}" style="font-size:0.75rem;color:#6366f1;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:3px;">
+                Detail
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </a>
+            @else
+            <span style="font-size:0.7rem;background:#faf5ff;color:#a855f7;padding:2px 10px;border-radius:99px;font-weight:700;border:1px solid #e9d5ff;">Disabled</span>
+            @endif
+        </div>
+        <p style="font-size:0.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 6px;">Air Quality</p>
+        <div style="display:flex;align-items:baseline;gap:4px;">
+            <span style="font-size:2.6rem;font-weight:900;color:#0f172a;line-height:1;">
+                @if($settings->air_quality_enabled) {{ $airQuality }} @else — @endif
+            </span>
+            @if($settings->air_quality_enabled)<span style="font-size:1.1rem;font-weight:500;color:#94a3b8;">PPM</span>@endif
+        </div>
+        <div style="margin-top:10px;height:4px;background:#f1f5f9;border-radius:99px;overflow:hidden;">
+            <div style="height:100%;width:{{ ($settings->air_quality_enabled && is_numeric($airQuality)) ? min(100, ($airQuality/1000)*100) : 0 }}%;background:linear-gradient(90deg,#d8b4fe,#a855f7);border-radius:99px;transition:width 0.6s ease;"></div>
+        </div>
+    </div>
+
     {{-- Status Card --}}
     <div class="stat-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
@@ -116,6 +145,10 @@
                 <span style="width:12px;height:12px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>
                 <span style="color:#64748b;font-weight:500;">Humidity (%)</span>
             </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <span style="width:12px;height:12px;border-radius:50%;background:#a855f7;display:inline-block;"></span>
+                <span style="color:#64748b;font-weight:500;">Air Quality (PPM)</span>
+            </div>
         </div>
     </div>
     <div style="height:340px;position:relative;">
@@ -132,6 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const labels  = @json($timestamps);
     const tempData = @json($temperatures);
     const humData  = @json($humidities);
+    const aqData   = @json($airQualities);
 
     new Chart(ctx, {
         type: 'line',
@@ -144,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     borderColor: '#ef4444',
                     backgroundColor: 'rgba(239,68,68,0.08)',
                     borderWidth: 2.5,
-                    pointRadius: 3,
+                    pointRadius: 0,
                     pointBackgroundColor: '#ef4444',
                     tension: 0.4,
                     yAxisID: 'y-temp',
@@ -156,10 +190,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59,130,246,0.08)',
                     borderWidth: 2.5,
-                    pointRadius: 3,
+                    pointRadius: 0,
                     pointBackgroundColor: '#3b82f6',
                     tension: 0.4,
                     yAxisID: 'y-hum',
+                    fill: true
+                },
+                {
+                    label: 'Air Quality (PPM)',
+                    data: aqData,
+                    borderColor: '#a855f7',
+                    backgroundColor: 'rgba(168,85,247,0.08)',
+                    borderWidth: 2.5,
+                    pointRadius: 0,
+                    pointBackgroundColor: '#a855f7',
+                    tension: 0.4,
+                    yAxisID: 'y-aq',
                     fill: true
                 }
             ]
@@ -195,6 +241,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     grid: { display: false },
                     ticks: { color: '#3b82f6', font: { weight: '600' } },
                     title: { display: true, text: 'Humidity (%)', color: '#3b82f6', font: { weight: '600' } }
+                },
+                'y-aq': {
+                    type: 'linear', position: 'right',
+                    grid: { display: false },
+                    ticks: { color: '#a855f7', font: { weight: '600' } },
+                    title: { display: true, text: 'Air Quality (PPM)', color: '#a855f7', font: { weight: '600' } }
                 }
             }
         }

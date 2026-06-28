@@ -27,6 +27,7 @@ class SettingsController extends Controller
         $validated = $request->validate([
             'temperature_enabled' => 'nullable|boolean',
             'humidity_enabled'    => 'nullable|boolean',
+            'air_quality_enabled' => 'nullable|boolean',
             'refresh_delay'       => 'required|integer|min:5|max:3600',
         ]);
 
@@ -34,6 +35,7 @@ class SettingsController extends Controller
 
         $newTempEnabled = $request->boolean('temperature_enabled');
         $newHumEnabled  = $request->boolean('humidity_enabled');
+        $newAirEnabled  = $request->boolean('air_quality_enabled');
         $newDelay       = (int) $validated['refresh_delay'];
 
         // Queue TalkBack commands for changes
@@ -47,6 +49,10 @@ class SettingsController extends Controller
             $commands[] = $newHumEnabled ? 'HUM_ON' : 'HUM_OFF';
         }
 
+        if ($newAirEnabled !== (bool) $settings->air_quality_enabled) {
+            $commands[] = $newAirEnabled ? 'AIR_ON' : 'AIR_OFF';
+        }
+
         // Always send the delay command so the device stays in sync
         // (minimum 15s enforced by the device; we send dashboard value)
         $commands[] = 'DELAY_' . $newDelay;
@@ -55,6 +61,7 @@ class SettingsController extends Controller
         $settings->update([
             'temperature_enabled' => $newTempEnabled,
             'humidity_enabled'    => $newHumEnabled,
+            'air_quality_enabled' => $newAirEnabled,
             'refresh_delay'       => $newDelay,
         ]);
 

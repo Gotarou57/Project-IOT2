@@ -258,6 +258,16 @@
                 <span style="margin-left:auto;font-size:0.7rem;background:rgba(59,130,246,0.15);color:#60a5fa;padding:2px 8px;border-radius:20px;font-weight:600;">%</span>
             </a>
 
+            <a href="{{ route('air-quality') }}" id="nav-air-quality" class="nav-item {{ request()->routeIs('air-quality') ? 'active' : '' }}">
+                <div class="nav-icon">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/>
+                    </svg>
+                </div>
+                <span>Air Quality</span>
+                <span style="margin-left:auto;font-size:0.7rem;background:rgba(168,85,247,0.15);color:#a855f7;padding:2px 8px;border-radius:20px;font-weight:600;">PPM</span>
+            </a>
+
             <span class="nav-label" style="margin-top:16px;">System</span>
 
             <a href="{{ route('settings') }}" id="nav-settings" class="nav-item {{ request()->routeIs('settings') ? 'active' : '' }}">
