@@ -116,11 +116,25 @@ document.addEventListener('DOMContentLoaded', function () {
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(168,85,247,0.25)');
     gradient.addColorStop(1, 'rgba(168,85,247,0.01)');
+    const aqChartData = @json($airQualities);
+    const validAq = aqChartData.filter(v => v !== null);
+    function getScaleBounds(validData) {
+        if (!validData.length) return { min: 0, max: 100 };
+        const max = Math.max(...validData);
+        const min = Math.min(...validData);
+        const diff = max - min;
+        const padding = diff === 0 ? (max === 0 ? 1 : Math.abs(max * 0.1)) : diff * 0.1;
+        return {
+            min: Math.floor(min - padding),
+            max: Math.ceil(max + padding)
+        };
+    }
+    const bounds = getScaleBounds(validAq);
 
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels,
+            labels: @json($timestamps),
             datasets: [{
                 label: 'Air Quality (PPM)',
                 data: aqData,
@@ -132,7 +146,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 pointBorderColor: '#fff',
                 pointBorderWidth: 0,
                 tension: 0.4,
-                fill: true
+                fill: true,
+                spanGaps: true
             }]
         },
         options: {
@@ -159,6 +174,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     ticks: { color: '#94a3b8', font: { size: 11 } }
                 },
                 y: {
+                    min: bounds.min,
+                    max: bounds.max,
                     grid: { color: 'rgba(0,0,0,0.04)' },
                     ticks: { color: '#a855f7', font: { weight: '600' }, callback: v => v + ' PPM' },
                     title: { display: true, text: 'Air Quality (PPM)', color: '#a855f7', font: { weight: '700' } }

@@ -116,11 +116,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(59,130,246,0.25)');
     gradient.addColorStop(1, 'rgba(59,130,246,0.01)');
+    
+    const humChartData = @json($humidities);
+    const validHum = humChartData.filter(v => v !== null);
+    function getScaleBounds(validData) {
+        if (!validData.length) return { min: 0, max: 100 };
+        const max = Math.max(...validData);
+        const min = Math.min(...validData);
+        const diff = max - min;
+        const padding = diff === 0 ? (max === 0 ? 1 : Math.abs(max * 0.1)) : diff * 0.1;
+        return {
+            min: Math.floor(min - padding),
+            max: Math.ceil(max + padding)
+        };
+    }
+    const bounds = getScaleBounds(validHum);
 
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels,
+            labels: @json($timestamps),
             datasets: [{
                 label: 'Humidity (%)',
                 data: humData,
@@ -132,7 +147,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 pointBorderColor: '#fff',
                 pointBorderWidth: 0,
                 tension: 0.4,
-                fill: true
+                fill: true,
+                spanGaps: true
             }]
         },
         options: {
@@ -159,7 +175,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     ticks: { color: '#94a3b8', font: { size: 11 } }
                 },
                 y: {
-                    min: 0, max: 100,
+                    min: bounds.min,
+                    max: bounds.max,
                     grid: { color: 'rgba(0,0,0,0.04)' },
                     ticks: { color: '#3b82f6', font: { weight: '600' }, callback: v => v + '%' },
                     title: { display: true, text: 'Humidity (%)', color: '#3b82f6', font: { weight: '700' } }

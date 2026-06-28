@@ -132,9 +132,19 @@
 {{-- ── Combined Chart ── --}}
 <div class="chart-card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
-        <div>
-            <h3 style="font-size:1rem;font-weight:700;color:#0f172a;margin:0 0 4px;">Environmental Trends</h3>
-            <p style="font-size:0.78rem;color:#94a3b8;margin:0;">Last 20 data points from ThingSpeak</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+            <h3 style="font-size:1rem;font-weight:700;color:#0f172a;margin:0;">Environmental Trends</h3>
+            <div style="display:flex; background:#f1f5f9; padding:4px; border-radius:8px; font-size:0.75rem; font-weight:600; color:#64748b; align-items:center; gap:2px; width:fit-content;">
+                @php $currRange = request()->query('range', '20'); @endphp
+                <a href="?range=20" style="padding:4px 12px; border-radius:6px; text-decoration:none; color:{{ $currRange == '20' ? '#0f172a' : '#64748b' }}; background:{{ $currRange == '20' ? '#fff' : 'transparent' }}; box-shadow:{{ $currRange == '20' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}; transition:all 0.2s;">20 Pts</a>
+                <a href="?range=50" style="padding:4px 12px; border-radius:6px; text-decoration:none; color:{{ $currRange == '50' ? '#0f172a' : '#64748b' }}; background:{{ $currRange == '50' ? '#fff' : 'transparent' }}; box-shadow:{{ $currRange == '50' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}; transition:all 0.2s;">50 Pts</a>
+                <a href="?range=60m" style="padding:4px 12px; border-radius:6px; text-decoration:none; color:{{ $currRange == '60m' ? '#0f172a' : '#64748b' }}; background:{{ $currRange == '60m' ? '#fff' : 'transparent' }}; box-shadow:{{ $currRange == '60m' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}; transition:all 0.2s;">1 Hour</a>
+                <a href="?range=360m" style="padding:4px 12px; border-radius:6px; text-decoration:none; color:{{ $currRange == '360m' ? '#0f172a' : '#64748b' }}; background:{{ $currRange == '360m' ? '#fff' : 'transparent' }}; box-shadow:{{ $currRange == '360m' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}; transition:all 0.2s;">6 Hours</a>
+                <a href="?range=1440m" style="padding:4px 12px; border-radius:6px; text-decoration:none; color:{{ $currRange == '1440m' ? '#0f172a' : '#64748b' }}; background:{{ $currRange == '1440m' ? '#fff' : 'transparent' }}; box-shadow:{{ $currRange == '1440m' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}; transition:all 0.2s;">24 Hours</a>
+                <a href="?range=10080m" style="padding:4px 12px; border-radius:6px; text-decoration:none; color:{{ $currRange == '10080m' ? '#0f172a' : '#64748b' }}; background:{{ $currRange == '10080m' ? '#fff' : 'transparent' }}; box-shadow:{{ $currRange == '10080m' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}; transition:all 0.2s;">1 Wk</a>
+                <a href="?range=43200m" style="padding:4px 12px; border-radius:6px; text-decoration:none; color:{{ $currRange == '43200m' ? '#0f172a' : '#64748b' }}; background:{{ $currRange == '43200m' ? '#fff' : 'transparent' }}; box-shadow:{{ $currRange == '43200m' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}; transition:all 0.2s;">1 Mo</a>
+                <a href="?range=all" style="padding:4px 12px; border-radius:6px; text-decoration:none; color:{{ $currRange == 'all' ? '#0f172a' : '#64748b' }}; background:{{ $currRange == 'all' ? '#fff' : 'transparent' }}; box-shadow:{{ $currRange == 'all' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}; transition:all 0.2s;">Max</a>
+            </div>
         </div>
         <div style="display:flex;align-items:center;gap:16px;font-size:0.78rem;">
             <button id="toggle-chart-view" style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);border:1px solid #e2e8f0;padding:6px 12px;border-radius:8px;color:#475569;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s ease;">
@@ -184,6 +194,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const humData  = @json($humidities);
     const aqData   = @json($airQualities);
 
+    const validTemp = tempData.filter(v => v !== null);
+    const validHum  = humData.filter(v => v !== null);
+    const validAq   = aqData.filter(v => v !== null);
+    
+    function getScaleBounds(validData) {
+        if (!validData.length) return { min: 0, max: 100 };
+        const max = Math.max(...validData);
+        const min = Math.min(...validData);
+        const diff = max - min;
+        const padding = diff === 0 ? (max === 0 ? 1 : Math.abs(max * 0.1)) : diff * 0.1;
+        return {
+            min: Math.floor(min - padding),
+            max: Math.ceil(max + padding)
+        };
+    }
+
+    const tempBounds = getScaleBounds(validTemp);
+    const humBounds = getScaleBounds(validHum);
+    const aqBounds = getScaleBounds(validAq);
+
     new Chart(ctx, {
         type: 'line',
         data: {
@@ -199,7 +229,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     pointBackgroundColor: '#ef4444',
                     tension: 0.4,
                     yAxisID: 'y-temp',
-                    fill: true
+                    fill: true,
+                    spanGaps: true
                 },
                 {
                     label: 'Humidity (%)',
@@ -211,7 +242,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     pointBackgroundColor: '#3b82f6',
                     tension: 0.4,
                     yAxisID: 'y-hum',
-                    fill: true
+                    fill: true,
+                    spanGaps: true
                 },
                 {
                     label: 'Air Quality (PPM)',
@@ -223,7 +255,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     pointBackgroundColor: '#a855f7',
                     tension: 0.4,
                     yAxisID: 'y-aq',
-                    fill: true
+                    fill: true,
+                    spanGaps: true
                 }
             ]
         },
@@ -250,18 +283,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 'y-temp': {
                     type: 'linear', position: 'left',
+                    min: tempBounds.min, max: tempBounds.max,
                     grid: { color: 'rgba(0,0,0,0.04)' },
                     ticks: { color: '#ef4444', font: { weight: '600' } },
                     title: { display: true, text: 'Temp (°C)', color: '#ef4444', font: { weight: '600' } }
                 },
                 'y-hum': {
                     type: 'linear', position: 'right',
+                    min: humBounds.min, max: humBounds.max,
                     grid: { display: false },
                     ticks: { color: '#3b82f6', font: { weight: '600' } },
                     title: { display: true, text: 'Humidity (%)', color: '#3b82f6', font: { weight: '600' } }
                 },
                 'y-aq': {
                     type: 'linear', position: 'right',
+                    min: aqBounds.min, max: aqBounds.max,
                     grid: { display: false },
                     ticks: { color: '#a855f7', font: { weight: '600' } },
                     title: { display: true, text: 'Air Quality (PPM)', color: '#a855f7', font: { weight: '600' } }
@@ -301,12 +337,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 data: tempData,
                 borderColor: '#ef4444',
                 backgroundColor: 'rgba(239,68,68,0.08)',
-                borderWidth: 2.5, pointRadius: 0, pointBackgroundColor: '#ef4444', tension: 0.4, fill: true
+                borderWidth: 2.5, pointRadius: 0, pointBackgroundColor: '#ef4444', tension: 0.4, fill: true, spanGaps: true
             }]
         },
         options: {
             ...commonOptions,
-            scales: { ...commonOptions.scales, y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#ef4444', font: { weight: '600' } }, title: { display: true, text: 'Temp (°C)', color: '#ef4444', font: { weight: '600' } } } }
+            scales: { ...commonOptions.scales, y: { min: tempBounds.min, max: tempBounds.max, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#ef4444', font: { weight: '600' } }, title: { display: true, text: 'Temp (°C)', color: '#ef4444', font: { weight: '600' } } } }
         }
     });
 
@@ -319,12 +355,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 data: humData,
                 borderColor: '#3b82f6',
                 backgroundColor: 'rgba(59,130,246,0.08)',
-                borderWidth: 2.5, pointRadius: 0, pointBackgroundColor: '#3b82f6', tension: 0.4, fill: true
+                borderWidth: 2.5, pointRadius: 0, pointBackgroundColor: '#3b82f6', tension: 0.4, fill: true, spanGaps: true
             }]
         },
         options: {
             ...commonOptions,
-            scales: { ...commonOptions.scales, y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#3b82f6', font: { weight: '600' } }, title: { display: true, text: 'Humidity (%)', color: '#3b82f6', font: { weight: '600' } } } }
+            scales: { ...commonOptions.scales, y: { min: humBounds.min, max: humBounds.max, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#3b82f6', font: { weight: '600' } }, title: { display: true, text: 'Humidity (%)', color: '#3b82f6', font: { weight: '600' } } } }
         }
     });
 
@@ -337,12 +373,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 data: aqData,
                 borderColor: '#a855f7',
                 backgroundColor: 'rgba(168,85,247,0.08)',
-                borderWidth: 2.5, pointRadius: 0, pointBackgroundColor: '#a855f7', tension: 0.4, fill: true
+                borderWidth: 2.5, pointRadius: 0, pointBackgroundColor: '#a855f7', tension: 0.4, fill: true, spanGaps: true
             }]
         },
         options: {
             ...commonOptions,
-            scales: { ...commonOptions.scales, y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#a855f7', font: { weight: '600' } }, title: { display: true, text: 'Air Quality (PPM)', color: '#a855f7', font: { weight: '600' } } } }
+            scales: { ...commonOptions.scales, y: { min: aqBounds.min, max: aqBounds.max, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#a855f7', font: { weight: '600' } }, title: { display: true, text: 'Air Quality (PPM)', color: '#a855f7', font: { weight: '600' } } } }
         }
     });
 

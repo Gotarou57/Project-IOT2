@@ -117,10 +117,25 @@ document.addEventListener('DOMContentLoaded', function () {
     gradient.addColorStop(0, 'rgba(239,68,68,0.25)');
     gradient.addColorStop(1, 'rgba(239,68,68,0.01)');
 
+    const tempChartData = @json($temperatures);
+    const validTemp = tempChartData.filter(v => v !== null);
+    function getScaleBounds(validData) {
+        if (!validData.length) return { min: 0, max: 100 };
+        const max = Math.max(...validData);
+        const min = Math.min(...validData);
+        const diff = max - min;
+        const padding = diff === 0 ? (max === 0 ? 1 : Math.abs(max * 0.1)) : diff * 0.1;
+        return {
+            min: Math.floor(min - padding),
+            max: Math.ceil(max + padding)
+        };
+    }
+    const bounds = getScaleBounds(validTemp);
+
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels,
+            labels: @json($timestamps),
             datasets: [{
                 label: 'Temperature (°C)',
                 data: tempData,
@@ -132,7 +147,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 pointBorderColor: '#fff',
                 pointBorderWidth: 0,
                 tension: 0.4,
-                fill: true
+                fill: true,
+                spanGaps: true
             }]
         },
         options: {
@@ -159,6 +175,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     ticks: { color: '#94a3b8', font: { size: 11 } }
                 },
                 y: {
+                    min: bounds.min,
+                    max: bounds.max,
                     grid: { color: 'rgba(0,0,0,0.04)' },
                     ticks: { color: '#ef4444', font: { weight: '600' }, callback: v => v + '°C' },
                     title: { display: true, text: 'Temperature (°C)', color: '#ef4444', font: { weight: '700' } }
