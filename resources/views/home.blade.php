@@ -136,23 +136,40 @@
             <h3 style="font-size:1rem;font-weight:700;color:#0f172a;margin:0 0 4px;">Environmental Trends</h3>
             <p style="font-size:0.78rem;color:#94a3b8;margin:0;">Last 20 data points from ThingSpeak</p>
         </div>
-        <div style="display:flex;gap:16px;font-size:0.78rem;">
-            <div style="display:flex;align-items:center;gap:6px;">
-                <span style="width:12px;height:12px;border-radius:50%;background:#ef4444;display:inline-block;"></span>
-                <span style="color:#64748b;font-weight:500;">Temperature (°C)</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-                <span style="width:12px;height:12px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>
-                <span style="color:#64748b;font-weight:500;">Humidity (%)</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-                <span style="width:12px;height:12px;border-radius:50%;background:#a855f7;display:inline-block;"></span>
-                <span style="color:#64748b;font-weight:500;">Air Quality (PPM)</span>
+        <div style="display:flex;align-items:center;gap:16px;font-size:0.78rem;">
+            <button id="toggle-chart-view" style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);border:1px solid #e2e8f0;padding:6px 12px;border-radius:8px;color:#475569;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s ease;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+                Separate Views
+            </button>
+            <div id="chart-legend" style="display:flex;gap:16px;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="width:12px;height:12px;border-radius:50%;background:#ef4444;display:inline-block;"></span>
+                    <span style="color:#64748b;font-weight:500;">Temperature (°C)</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="width:12px;height:12px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>
+                    <span style="color:#64748b;font-weight:500;">Humidity (%)</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="width:12px;height:12px;border-radius:50%;background:#a855f7;display:inline-block;"></span>
+                    <span style="color:#64748b;font-weight:500;">Air Quality (PPM)</span>
+                </div>
             </div>
         </div>
     </div>
-    <div style="height:340px;position:relative;">
+    <div id="combined-chart-container" style="height:340px;position:relative;">
         <canvas id="homeChart"></canvas>
+    </div>
+    <div id="separated-charts-container" style="display:none;flex-direction:column;gap:20px;">
+        <div style="height:200px;position:relative;">
+            <canvas id="tempChart"></canvas>
+        </div>
+        <div style="height:200px;position:relative;">
+            <canvas id="humChart"></canvas>
+        </div>
+        <div style="height:200px;position:relative;">
+            <canvas id="aqChart"></canvas>
+        </div>
     </div>
 </div>
 
@@ -211,6 +228,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ]
         },
         options: {
+            animation: false,
             responsive: true,
             maintainAspectRatio: false,
             interaction: { intersect: false, mode: 'index' },
@@ -250,6 +268,114 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         }
+    });
+
+    // Separated charts
+    const commonOptions = {
+        animation: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(15,23,42,0.92)',
+                titleColor: '#f8fafc',
+                bodyColor: '#cbd5e1',
+                padding: 12,
+                cornerRadius: 10,
+                displayColors: true
+            }
+        },
+        scales: {
+            x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } }
+        }
+    };
+
+    new Chart(document.getElementById('tempChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Temperature (°C)',
+                data: tempData,
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239,68,68,0.08)',
+                borderWidth: 2.5, pointRadius: 0, pointBackgroundColor: '#ef4444', tension: 0.4, fill: true
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: { ...commonOptions.scales, y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#ef4444', font: { weight: '600' } }, title: { display: true, text: 'Temp (°C)', color: '#ef4444', font: { weight: '600' } } } }
+        }
+    });
+
+    new Chart(document.getElementById('humChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Humidity (%)',
+                data: humData,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59,130,246,0.08)',
+                borderWidth: 2.5, pointRadius: 0, pointBackgroundColor: '#3b82f6', tension: 0.4, fill: true
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: { ...commonOptions.scales, y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#3b82f6', font: { weight: '600' } }, title: { display: true, text: 'Humidity (%)', color: '#3b82f6', font: { weight: '600' } } } }
+        }
+    });
+
+    new Chart(document.getElementById('aqChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Air Quality (PPM)',
+                data: aqData,
+                borderColor: '#a855f7',
+                backgroundColor: 'rgba(168,85,247,0.08)',
+                borderWidth: 2.5, pointRadius: 0, pointBackgroundColor: '#a855f7', tension: 0.4, fill: true
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: { ...commonOptions.scales, y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#a855f7', font: { weight: '600' } }, title: { display: true, text: 'Air Quality (PPM)', color: '#a855f7', font: { weight: '600' } } } }
+        }
+    });
+
+    // Toggle logic
+    const toggleBtn = document.getElementById('toggle-chart-view');
+    const combinedContainer = document.getElementById('combined-chart-container');
+    const separatedContainer = document.getElementById('separated-charts-container');
+    const chartLegend = document.getElementById('chart-legend');
+    
+    // Load saved state from localStorage
+    let isSeparated = localStorage.getItem('chartViewPref') === 'separated';
+    
+    function applyView() {
+        if (isSeparated) {
+            combinedContainer.style.display = 'none';
+            separatedContainer.style.display = 'flex';
+            chartLegend.style.display = 'none';
+            toggleBtn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16"/></svg> Combined View';
+        } else {
+            combinedContainer.style.display = 'block';
+            separatedContainer.style.display = 'none';
+            chartLegend.style.display = 'flex';
+            toggleBtn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/></svg> Separate Views';
+        }
+    }
+    
+    // Apply initial view
+    applyView();
+
+    toggleBtn.addEventListener('click', () => {
+        isSeparated = !isSeparated;
+        localStorage.setItem('chartViewPref', isSeparated ? 'separated' : 'combined');
+        applyView();
     });
 });
 </script>

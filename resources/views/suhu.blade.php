@@ -136,6 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }]
         },
         options: {
+            animation: false,
             responsive: true,
             maintainAspectRatio: false,
             interaction: { intersect: false, mode: 'index' },
