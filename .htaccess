@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Redirect all requests to the public folder
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Security: Block access to .env and other sensitive hidden files
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Security: Block access to configuration files
+<FilesMatch "^(artisan|composer\.json|package\.json|README\.md)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
