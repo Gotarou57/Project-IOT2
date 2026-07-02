@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->boolean('temperature_enabled')->default(true);
             $table->boolean('humidity_enabled')->default(true);
+            $table->boolean('air_quality_enabled')->default(true);
             $table->unsignedInteger('refresh_delay')->default(30); // seconds
             $table->timestamps();
         });
@@ -23,6 +24,7 @@ return new class extends Migration
         \DB::table('sensor_settings')->insert([
             'temperature_enabled' => true,
             'humidity_enabled'    => true,
+            'air_quality_enabled' => true,
             'refresh_delay'       => 30,
             'created_at'          => now(),
             'updated_at'          => now(),

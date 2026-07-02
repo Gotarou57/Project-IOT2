@@ -3,74 +3,38 @@
 namespace App\Http\Controllers;
 
 use App\Models\SensorSetting;
-use Illuminate\Support\Facades\Http;
-use Carbon\Carbon;
+use App\Services\SensorDataService;
 
 class SensorController extends Controller
 {
-    /**
-     * Fetch the latest sensor data from ThingSpeak.
-     */
-    private function fetchSensorData(): array
-    {
-        $channelId = env('THINGSPEAK_CHANNEL_ID');
-        $apiKey    = env('THINGSPEAK_READ_API_KEY');
-
-        $url = "https://api.thingspeak.com/channels/{$channelId}/feeds.json?results=20";
-
-        $response = Http::get($url, ['api_key' => $apiKey]);
-
-        $timestamps   = [];
-        $temperatures = [];
-        $humidities   = [];
-
-        if ($response->successful()) {
-            $data  = $response->json();
-            $feeds = $data['feeds'] ?? [];
-
-            foreach ($feeds as $feed) {
-                $timestamps[]   = Carbon::parse($feed['created_at'])->setTimezone('Asia/Jakarta')->format('H:i');
-                $temperatures[] = (float) ($feed['field1'] ?? 0);
-                $humidities[]   = (float) ($feed['field2'] ?? 0);
-            }
-
-            $temperature = end($temperatures) ?: 'N/A';
-            $humidity    = end($humidities)   ?: 'N/A';
-            $timestamp   = end($timestamps)   ?: 'N/A';
-        } else {
-            $temperature = 'Error';
-            $humidity    = 'Error';
-            $timestamp   = 'N/A';
-        }
-
-        return compact(
-            'temperature',
-            'humidity',
-            'timestamp',
-            'timestamps',
-            'temperatures',
-            'humidities'
-        );
-    }
+    public function __construct(protected SensorDataService $service) {}
 
     /**
      * Home overview page.
      */
     public function home()
     {
-        $data     = $this->fetchSensorData();
+        $range    = request()->query('range', '20');
+        $data     = $this->service->fetch($range);
         $settings = SensorSetting::current();
         return view('home', array_merge($data, compact('settings')));
     }
 
     /**
-     * Suhu (temperature) detail page.
+     * Temperature detail page.
      */
     public function suhu()
     {
-        $data     = $this->fetchSensorData();
+        $range    = request()->query('range', '20');
+        $data     = $this->service->fetchSingle('temperature', $range);
         $settings = SensorSetting::current();
-        return view('suhu', array_merge($data, compact('settings')));
+        return view('sensor.detail', array_merge($data, compact('settings'), [
+            'sensorType'  => 'temperature',
+            'sensorLabel' => 'Temperature',
+            'sensorUnit'  => '°C',
+            'sensorColor' => '#ef4444',
+            'sensorField' => 'temperatures',
+        ]));
     }
 
     /**
@@ -78,9 +42,33 @@ class SensorController extends Controller
      */
     public function humidity()
     {
-        $data     = $this->fetchSensorData();
+        $range    = request()->query('range', '20');
+        $data     = $this->service->fetchSingle('humidity', $range);
         $settings = SensorSetting::current();
-        return view('humidity', array_merge($data, compact('settings')));
+        return view('sensor.detail', array_merge($data, compact('settings'), [
+            'sensorType'  => 'humidity',
+            'sensorLabel' => 'Humidity',
+            'sensorUnit'  => '%',
+            'sensorColor' => '#3b82f6',
+            'sensorField' => 'humidities',
+        ]));
+    }
+
+    /**
+     * Air Quality detail page.
+     */
+    public function airQuality()
+    {
+        $range    = request()->query('range', '20');
+        $data     = $this->service->fetchSingle('air-quality', $range);
+        $settings = SensorSetting::current();
+        return view('sensor.detail', array_merge($data, compact('settings'), [
+            'sensorType'  => 'air-quality',
+            'sensorLabel' => 'Air Quality',
+            'sensorUnit'  => 'PPM',
+            'sensorColor' => '#a855f7',
+            'sensorField' => 'airQualities',
+        ]));
     }
 
     /**

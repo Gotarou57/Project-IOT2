@@ -12,6 +12,7 @@ Route::get('/dashboard', [SensorController::class, 'index']);
 Route::get('/home', [SensorController::class, 'home'])->name('home');
 Route::get('/suhu', [SensorController::class, 'suhu'])->name('suhu');
 Route::get('/humidity', [SensorController::class, 'humidity'])->name('humidity');
+Route::get('/air-quality', [SensorController::class, 'airQuality'])->name('air-quality');
 
 // Settings
 Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
